@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konversi dan Gabungkan File TXT</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Konversi dan Gabungkan File TXT</h1>
+        
+        <!-- Konversi TXT ke VCF -->
+        <section class="section">
+            <h2>Konversi TXT ke VCF</h2>
+            <form id="convert-form">
+                <label for="txt-file">Pilih File TXT (untuk konversi):</label>
+                <input type="file" id="txt-file" accept=".txt">
+                
+                <label for="contact-count">Jumlah Kontak per File VCF:</label>
+                <input type="number" id="contact-count" min="1" value="10">
+
+                <label for="contact-name">Nama Kontak:</label>
+                <input type="text" id="contact-name" placeholder="Nama Kontak">
+
+                <button type="button" onclick="convertTxtToVcf()">Konversi</button>
+                
+                <div id="file-info"></div>
+            </form>
+        </section>
+
+        <!-- Gabungkan File TXT -->
+        <section class="section">
+            <h2>Gabungkan File TXT</h2>
+            <form id="merge-form">
+                <label for="merge-files">Pilih File TXT (untuk digabungkan):</label>
+                <input type="file" id="merge-files" accept=".txt" multiple>
+                
+                <button type="button" onclick="mergeTxtFiles()">Gabungkan dan Unduh</button>
+                
+                <div id="merge-file-info"></div>
+            </form>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
