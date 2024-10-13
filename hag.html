@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Konversi TXT ke VCF</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <style>
+        /* Gaya CSS tetap sama */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 95%;
+            margin: 20px auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .header div {
+            display: flex;
+            align-items: center;
+        }
+        .form-section {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-section table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .form-section table td {
+            padding: 5px;
+        }
+        .form-section table input[type="text"], 
+        .form-section table input[type="file"] {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+        }
+        .form-section .process-button {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .form-section .process-button button {
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-section .process-button button:hover {
+            background-color: #0056b3;
+        }
+        .table-section {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        .table-section table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-section table th, 
+        .table-section table td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            text-align: center;
+        }
+        .table-section table th {
+            background-color: #e9ecef;
+        }
+        .table-section table input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        .table-section table .checkbox-label {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <span>Konversi TXT ke VCF</span>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <table>
+                <tr>
+                    <td>Pilih File TXT (maksimal 15):</td>
+                    <td>
+                        <input type="file" id="txtFiles" accept=".txt" multiple />
+                    </td>
+                </tr>
+                <tr>
+                    <td>Nama Kontak:</td>
+                    <td>
+                        <input type="text" id="contactName" placeholder="Masukkan nama kontak" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>Jumlah Kontak per File:</td>
+                    <td>
+                        <input type="number" id="contactsPerFile" min="1" placeholder="Jumlah kontak per file" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>Nomor Awal:</td>
+                    <td>
+                        <input type="number" id="startingNumber" min="1" placeholder="Masukkan nomor awal" />
+                    </td>
+                </tr>
+            </table>
+            <div class="process-button">
+                <button onclick="loadTxt()">Tampilkan Data</button>
+            </div>
+            <div class="process-button">
+                <button onclick="convertToVCF()">Konversi ke VCF</button>
+            </div>
+        </div>
+
+        <div class="table-section">
+            <table id="dataTable">
+                <thead>
+                    <tr id="tableHeader">
+                        <th>Pilih</th>
+                        <!-- Kolom untuk setiap file akan ditambahkan di sini -->
+                    </tr>
+                </thead>
+                <tbody id="dataRows">
+                    <!-- Data dari file TXT akan ditampilkan di sini -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let numbers = [];
+        let fileNames = []; // Menyimpan nama file
+
+        function loadTxt() {
+            const fileInput = document.getElementById('txtFiles');
+            const files = fileInput.files;
+
+            if (files.length === 0 || files.length > 15) {
+                alert('Silakan pilih maksimal 15 file TXT');
+                return;
+            }
+
+            const tableBody = document.getElementById('dataRows');
+            const tableHeader = document.getElementById('tableHeader');
+            tableBody.innerHTML = '';  // Kosongkan tabel sebelum menampilkan data
+            tableHeader.innerHTML = '<th>Pilih</th>'; // Reset header
+            numbers = Array.from({ length: files.length }, () => []);  // Membuat array 2D untuk menyimpan nomor
+            fileNames = Array.from({ length: files.length }, (_, index) => files[index].name); // Menyimpan nama file
+
+            const filePromises = Array.from(files).map((file, index) => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const lines = e.target.result.split('\n');
+                        lines.forEach(line => {
+                            const number = line.trim();
+                            if (number) {
+                                numbers[index].push(number);
+                            }
+                        });
+                        resolve();
+                    };
+                    reader.readAsText(file);
+                });
+            });
+
+            Promise.all(filePromises).then(() => {
+                fileNames.forEach(fileName => {
+                    const headerCell = document.createElement('th');
+                    headerCell.textContent = fileName; // Set header dengan nama file
+                    tableHeader.appendChild(headerCell);
+                });
+
+                for (let i = 0; i < Math.max(...numbers.map(arr => arr.length)); i++) {
+                    const row = document.createElement('tr');
+                    const checkboxCell = document.createElement('td');
+                    checkboxCell.className = "checkbox-label";
+                    checkboxCell.innerHTML = `<input type="checkbox" value="${i}" checked />`; // Checkbox dicentang semua
+                    row.appendChild(checkboxCell);
+
+                    numbers.forEach((numberArray) => {
+                        const cell = document.createElement('td');
+                        cell.textContent = numberArray[i] || ''; // Tampilkan nomor atau kosong jika tidak ada
+                        row.appendChild(cell);
+                    });
+
+                    tableBody.appendChild(row);
+                }
+            });
+        }
+
+        function convertToVCF() {
+            const selectedIndices = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value);
+            if (selectedIndices.length === 0) {
+                alert('Pilih nomor telepon untuk dikonversi');
+                return;
+            }
+
+            const contactName = document.getElementById('contactName').value || 'Contact';
+            const contactsPerFile = document.getElementById('contactsPerFile').value || selectedIndices.length;
+            const startingNumber = parseInt(document.getElementById('startingNumber').value) || 1;
+
+            // Loop untuk setiap file yang diunggah
+            numbers.forEach((numberArray, fileIndex) => {
+                let vcfData = '';
+                let count = 0;
+
+                selectedIndices.forEach(index => {
+                    const number = numberArray[index];
+                    if (number) {
+                        const currentNumber = startingNumber + count; // Menghitung nomor yang sesuai
+                        vcfData += `BEGIN:VCARD\nVERSION:3.0\nFN:${contactName} ${String(currentNumber).padStart(3, '0')}\nTEL;TYPE=CELL:${number}\nEND:VCARD\n`;
+                        count++;
+
+                        // Break the VCF data into multiple files jika jumlah kontak per file terpenuhi
+                        if (count >= contactsPerFile) {
+                            const vcfFileName = fileNames[fileIndex].replace('.txt', '.vcf'); // Mengganti nama file sesuai dengan nama file TXT
+                            const blob = new Blob([vcfData], { type: 'text/vcard' });
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(blob);
+                            link.download = vcfFileName;
+                            link.click();
+                            vcfData = ''; // Reset untuk file selanjutnya
+                            count = 0;
+                        }
+                    }
+                });
+
+                // Jika masih ada data VCF yang tersisa
+                if (vcfData) {
+                    const vcfFileName = fileNames[fileIndex].replace('.txt', '.vcf'); // Mengganti nama file sesuai dengan nama file TXT
+                    const blob = new Blob([vcfData], { type: 'text/vcard' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = vcfFileName;
+                    link.click();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
